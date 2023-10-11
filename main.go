@@ -15,17 +15,13 @@ import (
 var Route = gin.Default()
 var Client *mongo.Client
 
-func RouteURl() {
-	Route.POST("/register", InsertOneMovie)
-
-}
-
 func main() {
 	// database.ConnectDB()
 
 	//client option
+	var err error
 	clientOption := options.Client().ApplyURI("mongodb+srv://Naman:Naman%4012345@cluster0.bezaxfc.mongodb.net/?retryWrites=true&w=majority")
-	Client, err := mongo.Connect(context.Background(), clientOption)
+	Client, err = mongo.Connect(context.Background(), clientOption)
 
 	if err != nil {
 		log.Fatal(err)
@@ -39,7 +35,8 @@ func main() {
 	}
 	fmt.Println("MongoDb connection success")
 	fmt.Println("Hello form main Mongo Db APis")
-	RouteURl()
+
+	Route.POST("/register", InsertOneMovie)
 
 	err = Route.Run(":8080")
 
@@ -50,10 +47,6 @@ func main() {
 
 }
 
-func init() {
-	// database.ConnectDB()
-
-}
 func InsertOneMovie(ctx *gin.Context) {
 	var request model.NetFlix
 	err := ctx.ShouldBindJSON(&request)
