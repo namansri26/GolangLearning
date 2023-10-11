@@ -1,50 +1,76 @@
-package main 
+package main
 
 import (
-    "fmt"
-	 "log"
-	 "net/http"
-	 "encoding/json"
-	 "github.com/gorilla/mux"
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/naman/mongoapi/model"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var Route = gin.Default()
+var Client *mongo.Client
 
-
-type Article  struct{
-  Title string `json:"Title"`
-  Dec string  `json: "Descrption"`
-  Content string `jsn:"Content"`
-}
-
-type Articles [] Article
-
-func allArticles(w http.ResponseWriter , r *http.Request){
-	articles := Articles{Article{Title: "My name is Namam", Dec : "Description" , Content: "Content is very good"}}
-	fmt.Println("Hits the end point for arcticles" )
-	json.NewEncoder(w).Encode(articles)
+func RouteURl() {
+	Route.POST("/register", InsertOneMovie)
 
 }
 
-func testPostArticles(w http.ResponseWriter , r *http.Request){
-	fmt.Fprintf(w, "testPostArticles:-----")	
+func main() {
+	// database.ConnectDB()
+
+	//client option
+	clientOption := options.Client().ApplyURI("mongodb+srv://Naman:Naman%4012345@cluster0.bezaxfc.mongodb.net/?retryWrites=true&w=majority")
+	Client, err := mongo.Connect(context.Background(), clientOption)
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	// Check if the connection is established
+	err = Client.Ping(context.Background(), nil)
+	if err != nil {
+		return
+	}
+	fmt.Println("MongoDb connection success")
+	fmt.Println("Hello form main Mongo Db APis")
+	RouteURl()
+
+	err = Route.Run(":8080")
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 }
 
-func homePage(w http.ResponseWriter , r *http.Request ){
-fmt.Fprintf(w, "HomePage Hit:-----")
-}
-
-
-func handleRequests(){
-
-	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/" , homePage )
-	myRouter.HandleFunc("/articles" , allArticles).Methods("GET")
-	myRouter.HandleFunc("/articles" , testPostArticles).Methods("POST")
-	log.Fatal(http.ListenAndServe(":8081",myRouter))
+func init() {
+	// database.ConnectDB()
 
 }
+func InsertOneMovie(ctx *gin.Context) {
+	var request model.NetFlix
+	err := ctx.ShouldBindJSON(&request)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	collection := Client.Database("NetFlix").Collection("watchlist")
+	fmt.Println("COLLECTION : ", collection)
+	inserted, err := collection.InsertOne(context.Background(), request)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
-func main(){
-     handleRequests() 
+	ctx.Writer.WriteHeader(http.StatusOK)
+
+	fmt.Println("Inserted one Id in db: ", inserted.InsertedID)
+
 }
