@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/naman/mongoapi/model"
+
+	// for creating the models
+	controller "github.com/naman/mongoapi/controllers"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -19,6 +20,8 @@ func main() {
 	// database.ConnectDB()
 
 	//client option
+	gin.SetMode(gin.ReleaseMode)
+	Route := gin.New()
 	var err error
 	clientOption := options.Client().ApplyURI("mongodb+srv://Naman:Naman%4012345@cluster0.bezaxfc.mongodb.net/?retryWrites=true&w=majority")
 	Client, err = mongo.Connect(context.Background(), clientOption)
@@ -28,15 +31,15 @@ func main() {
 		return
 	}
 
-	// Check if the connection is established
+	// Check if the connection is established or not
 	err = Client.Ping(context.Background(), nil)
 	if err != nil {
 		return
 	}
 	fmt.Println("MongoDb connection success")
-	fmt.Println("Hello form main Mongo Db APis")
+	fmt.Println("Hello from main Mongo Db APis")
 
-	Route.POST("/register", InsertOneMovie)
+	Route.POST("/register", controller.InsertOneMovie)
 
 	err = Route.Run(":8080")
 
@@ -44,26 +47,5 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-
-}
-
-func InsertOneMovie(ctx *gin.Context) {
-	var request model.NetFlix
-	err := ctx.ShouldBindJSON(&request)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	collection := Client.Database("NetFlix").Collection("watchlist")
-	fmt.Println("COLLECTION : ", collection)
-	inserted, err := collection.InsertOne(context.Background(), request)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	ctx.Writer.WriteHeader(http.StatusOK)
-
-	fmt.Println("Inserted one Id in db: ", inserted.InsertedID)
 
 }
