@@ -16,9 +16,7 @@ var Route = gin.Default()
 var Client *mongo.Client
 
 func main() {
-	// database.ConnectDB()
 
-	//client option
 	var err error
 	clientOption := options.Client().ApplyURI("mongodb+srv://Naman:Naman%4012345@cluster0.bezaxfc.mongodb.net/?retryWrites=true&w=majority")
 	Client, err = mongo.Connect(context.Background(), clientOption)
